@@ -1,25 +1,24 @@
 # ---------------------------------------------------------------------------
-# Pipeline access: Azure DevOps workload identity federation (OIDC).
-# A service connection named var.azdo_service_connection_name in
-# var.azdo_project_name can assume the deploy role. No long-lived keys.
+# Workspace access: HCP Terraform dynamic provider credentials (OIDC).
+# Any workspace in the customer's HCP Terraform project can assume the deploy
+# role for plan and apply. No long-lived keys.
 # ---------------------------------------------------------------------------
 
 locals {
-  azdo_issuer_host = "vstoken.dev.azure.com/${var.azdo_organization_id}"
-  azdo_audience    = "api://AzureADTokenExchange"
-  azdo_subject     = "sc://${var.azdo_organization_name}/${var.azdo_project_name}/${var.azdo_service_connection_name}"
+  tfc_audience = "aws.workload.identity"
+  tfc_subject  = "organization:${var.tfc_organization}:project:${var.tfc_project_name}:workspace:*:run_phase:*"
 }
 
-data "tls_certificate" "azdo" {
-  url = "https://vstoken.dev.azure.com"
+data "tls_certificate" "tfc" {
+  url = "https://${var.tfc_hostname}"
 }
 
-resource "aws_iam_openid_connect_provider" "azdo" {
+resource "aws_iam_openid_connect_provider" "tfc" {
   provider = aws.account
 
-  url             = "https://${local.azdo_issuer_host}"
-  client_id_list  = [local.azdo_audience]
-  thumbprint_list = [data.tls_certificate.azdo.certificates[0].sha1_fingerprint]
+  url             = "https://${var.tfc_hostname}"
+  client_id_list  = [local.tfc_audience]
+  thumbprint_list = [data.tls_certificate.tfc.certificates[0].sha1_fingerprint]
 }
 
 data "aws_iam_policy_document" "deploy_trust" {
@@ -28,19 +27,19 @@ data "aws_iam_policy_document" "deploy_trust" {
 
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.azdo.arn]
+      identifiers = [aws_iam_openid_connect_provider.tfc.arn]
     }
 
     condition {
       test     = "StringEquals"
-      variable = "${local.azdo_issuer_host}:aud"
-      values   = [local.azdo_audience]
+      variable = "${var.tfc_hostname}:aud"
+      values   = [local.tfc_audience]
     }
 
     condition {
-      test     = "StringEquals"
-      variable = "${local.azdo_issuer_host}:sub"
-      values   = [local.azdo_subject]
+      test     = "StringLike"
+      variable = "${var.tfc_hostname}:sub"
+      values   = [local.tfc_subject]
     }
   }
 }
@@ -48,8 +47,8 @@ data "aws_iam_policy_document" "deploy_trust" {
 resource "aws_iam_role" "deploy" {
   provider = aws.account
 
-  name                 = "azdo-deploy"
-  description          = "Assumed by Azure DevOps pipelines in ${var.azdo_project_name} via OIDC."
+  name                 = "tfc-deploy"
+  description          = "Assumed by HCP Terraform workspaces in project ${var.tfc_project_name} via dynamic credentials."
   assume_role_policy   = data.aws_iam_policy_document.deploy_trust.json
   max_session_duration = 3600
 }

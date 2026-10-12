@@ -1,5 +1,5 @@
 # Read by the customer-onboarding module (data "tfe_outputs") and copied into
-# the Azure DevOps variable group. Keep these non-sensitive.
+# the customer variable set. Keep these non-sensitive.
 
 output "account_id" {
   description = "ID of the customer AWS account."
@@ -12,13 +12,13 @@ output "aws_region" {
 }
 
 output "deploy_role_arn" {
-  description = "Role Azure DevOps pipelines assume via OIDC."
+  description = "Role HCP Terraform workspaces in the customer project assume via dynamic credentials."
   value       = aws_iam_role.deploy.arn
 }
 
 output "oidc_provider_arn" {
-  description = "IAM OIDC provider for the Azure DevOps organization."
-  value       = aws_iam_openid_connect_provider.azdo.arn
+  description = "IAM OIDC provider for HCP Terraform."
+  value       = aws_iam_openid_connect_provider.tfc.arn
 }
 
 output "vpc_id" {

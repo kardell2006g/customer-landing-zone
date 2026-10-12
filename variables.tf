@@ -60,28 +60,24 @@ variable "enable_nat_gateway" {
   default     = true
 }
 
-variable "azdo_organization_name" {
-  description = "Azure DevOps organization name. Part of the OIDC subject the deploy role trusts."
+variable "tfc_hostname" {
+  description = "HCP Terraform / Terraform Enterprise hostname. The OIDC issuer the deploy role trusts."
+  type        = string
+  default     = "app.terraform.io"
+}
+
+variable "tfc_organization" {
+  description = "HCP Terraform organization. Part of the OIDC subject the deploy role trusts."
   type        = string
 }
 
-variable "azdo_organization_id" {
-  description = "Azure DevOps organization ID (GUID). Part of the OIDC issuer URL."
-  type        = string
-}
-
-variable "azdo_project_name" {
-  description = "Azure DevOps project whose service connection may assume the deploy role."
-  type        = string
-}
-
-variable "azdo_service_connection_name" {
-  description = "Name of the AWS service connection in azdo_project_name that may assume the deploy role."
+variable "tfc_project_name" {
+  description = "HCP Terraform project whose workspaces may assume the deploy role."
   type        = string
 }
 
 variable "deploy_role_policy_arns" {
-  description = "Managed policies attached to the pipeline deploy role."
+  description = "Managed policies attached to the workspace deploy role."
   type        = list(string)
   default     = ["arn:aws:iam::aws:policy/PowerUserAccess"]
 }
