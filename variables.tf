@@ -21,8 +21,9 @@ variable "account_email" {
 }
 
 variable "parent_ou_id" {
-  description = "AWS Organizations OU (ou-...) or root (r-...) to create the account in."
+  description = "AWS Organizations OU (ou-...) or root (r-...) to create the account in. Null creates it at the organization root."
   type        = string
+  default     = null
 }
 
 variable "aws_region" {
