@@ -35,3 +35,8 @@ output "private_subnet_ids" {
   description = "Private subnet IDs, one per AZ."
   value       = aws_subnet.private[*].id
 }
+
+output "account_email" {
+  description = "Root email of the customer AWS account."
+  value       = aws_organizations_account.this.email
+}

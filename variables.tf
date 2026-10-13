@@ -82,3 +82,10 @@ variable "deploy_role_policy_arns" {
   type        = list(string)
   default     = ["arn:aws:iam::aws:policy/PowerUserAccess"]
 }
+
+# Injected by HCP Terraform into every run ("<organization>/<workspace>").
+variable "TFC_WORKSPACE_SLUG" {
+  description = "Set automatically by HCP Terraform. Leave empty."
+  type        = string
+  default     = ""
+}

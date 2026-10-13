@@ -18,11 +18,16 @@ terraform {
 }
 
 locals {
-  common_tags = {
-    "Company"           = var.company_name
-    "Environment"       = var.environment
-    "Terraform Managed" = "true"
-  }
+  # "TFC Workspace" links every resource, including the AWS account itself,
+  # back to the workspace that owns its state.
+  common_tags = merge(
+    {
+      "Company"           = var.company_name
+      "Environment"       = var.environment
+      "Terraform Managed" = "true"
+    },
+    var.TFC_WORKSPACE_SLUG != "" ? { "TFC Workspace" = var.TFC_WORKSPACE_SLUG } : {},
+  )
 }
 
 # Management (Organizations) account. Credentials come from the variable set
