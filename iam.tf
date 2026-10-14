@@ -52,6 +52,9 @@ resource "aws_iam_role" "deploy" {
   description          = "Assumed by HCP Terraform workspaces in project ${coalesce(var.tfc_project_name, "unset")} via dynamic credentials."
   assume_role_policy   = data.aws_iam_policy_document.deploy_trust[0].json
   max_session_duration = 3600
+
+  # Detach any policies added outside Terraform so destroy doesn't fail on them.
+  force_detach_policies = true
 }
 
 resource "aws_iam_role_policy_attachment" "deploy" {
