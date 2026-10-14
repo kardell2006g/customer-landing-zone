@@ -1,6 +1,4 @@
-# All of these are set on the workspace by the customer-onboarding module.
-# Some only describe the account that would be created; the dummy landing
-# zone accepts them so the module's interface doesn't change.
+# Set on the workspace by the customer-onboarding module.
 
 variable "company_name" {
   description = "Customer company name."
@@ -13,7 +11,7 @@ variable "environment" {
 }
 
 variable "account_name" {
-  description = "Name of the (dummy) AWS account."
+  description = "Customer account name (dummy account). Prefix of every resource name."
   type        = string
 }
 
@@ -22,26 +20,20 @@ variable "account_email" {
   type        = string
 }
 
-variable "parent_ou_id" {
-  description = "AWS Organizations OU the account would be created in. Unused by the dummy landing zone."
-  type        = string
-  default     = null
-}
-
 variable "aws_region" {
-  description = "Home region reported for the landing zone."
+  description = "Region to build the customer network in."
   type        = string
   default     = "us-east-1"
 }
 
 variable "vpc_cidr" {
-  description = "CIDR reported for the landing zone VPC. Unused by the dummy landing zone."
+  description = "CIDR block for the customer VPC. Split into /20s: public subnets from the bottom, private from the middle. Overlapping CIDRs across customers are allowed but block peering between them."
   type        = string
   default     = "10.0.0.0/16"
 }
 
 variable "az_count" {
-  description = "Number of dummy public and private subnet IDs to generate."
+  description = "Number of availability zones to spread subnets across."
   type        = number
   default     = 2
 
@@ -52,19 +44,44 @@ variable "az_count" {
 }
 
 variable "tfc_hostname" {
-  description = "HCP Terraform hostname. Unused by the dummy landing zone."
+  description = "HCP Terraform hostname. The OIDC issuer the deploy role trusts."
   type        = string
   default     = "app.terraform.io"
 }
 
 variable "tfc_organization" {
-  description = "HCP Terraform organization. Unused by the dummy landing zone."
+  description = "HCP Terraform organization. Part of the OIDC subject the deploy role trusts."
   type        = string
   default     = null
 }
 
 variable "tfc_project_name" {
-  description = "HCP Terraform project of the customer. Unused by the dummy landing zone."
+  description = "HCP Terraform project whose workspaces may assume the deploy role."
   type        = string
   default     = null
+}
+
+variable "enable_nat_gateway" {
+  description = "Create a NAT gateway (about $32/month plus data) so private subnets have outbound internet."
+  type        = bool
+  default     = false
+}
+
+variable "create_deploy_role" {
+  description = "Create a per-customer IAM role for HCP Terraform dynamic credentials. Needs an existing IAM OIDC provider for tfc_hostname in the shared account."
+  type        = bool
+  default     = true
+}
+
+variable "deploy_role_policy_arns" {
+  description = "Managed policies attached to the deploy role."
+  type        = list(string)
+  default     = ["arn:aws:iam::aws:policy/PowerUserAccess"]
+}
+
+# Injected by HCP Terraform into every run ("<organization>/<workspace>").
+variable "TFC_WORKSPACE_SLUG" {
+  description = "Set automatically by HCP Terraform. Leave empty."
+  type        = string
+  default     = ""
 }

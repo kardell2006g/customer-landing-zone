@@ -1,12 +1,10 @@
 # ---------------------------------------------------------------------------
-# Dummy landing zone
+# Dummy customer account
 #
-# Nothing is created in AWS. This stack generates placeholder values shaped
-# like a real landing zone's (account ID, role ARN, VPC and subnet IDs) and
-# keeps them in this workspace's state, so they stay the same on every run
-# and the onboarding module's handoff works unchanged.
-#
-# Account IDs start with "0000" so they're easy to recognize as fake.
+# No AWS account is created. The account ID is generated and kept in this
+# workspace's state, so it stays the same on every run. It starts with "0000"
+# so it's easy to recognize as fake. The customer's real resources (network,
+# deploy role) live in the shared account; see network.tf and iam.tf.
 # ---------------------------------------------------------------------------
 
 resource "random_integer" "account_id" {
@@ -14,27 +12,8 @@ resource "random_integer" "account_id" {
   max = 99999999
 }
 
-resource "random_id" "vpc" {
-  byte_length = 9
-}
-
-resource "random_id" "public_subnet" {
-  count = var.az_count
-
-  byte_length = 9
-}
-
-resource "random_id" "private_subnet" {
-  count = var.az_count
-
-  byte_length = 9
-}
+data "aws_caller_identity" "current" {}
 
 locals {
   account_id = format("0000%08d", random_integer.account_id.result)
-
-  # Real VPC and subnet IDs are 17 hex characters after the prefix.
-  vpc_id             = "vpc-${substr(random_id.vpc.hex, 0, 17)}"
-  public_subnet_ids  = [for r in random_id.public_subnet : "subnet-${substr(r.hex, 0, 17)}"]
-  private_subnet_ids = [for r in random_id.private_subnet : "subnet-${substr(r.hex, 0, 17)}"]
 }
