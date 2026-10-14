@@ -1,9 +1,24 @@
 # Read by the customer-onboarding module (data "tfe_outputs") and copied into
-# the customer variable set. Keep these non-sensitive.
+# the customer variable set. Keep these non-sensitive. All values are dummies.
+
+output "is_dummy" {
+  description = "True: no AWS account or resources exist behind these values."
+  value       = true
+}
 
 output "account_id" {
-  description = "ID of the customer AWS account."
-  value       = aws_organizations_account.this.id
+  description = "Dummy AWS account ID (starts with 0000)."
+  value       = local.account_id
+}
+
+output "account_name" {
+  description = "Name the AWS account would have."
+  value       = var.account_name
+}
+
+output "account_email" {
+  description = "Root email the AWS account would use."
+  value       = var.account_email
 }
 
 output "aws_region" {
@@ -12,31 +27,21 @@ output "aws_region" {
 }
 
 output "deploy_role_arn" {
-  description = "Role HCP Terraform workspaces in the customer project assume via dynamic credentials."
-  value       = aws_iam_role.deploy.arn
-}
-
-output "oidc_provider_arn" {
-  description = "IAM OIDC provider for HCP Terraform."
-  value       = aws_iam_openid_connect_provider.tfc.arn
+  description = "Dummy deploy role ARN. Nothing can assume it."
+  value       = "arn:aws:iam::${local.account_id}:role/tfc-deploy"
 }
 
 output "vpc_id" {
-  description = "Landing zone VPC ID."
-  value       = aws_vpc.this.id
+  description = "Dummy VPC ID."
+  value       = local.vpc_id
 }
 
 output "public_subnet_ids" {
-  description = "Public subnet IDs, one per AZ."
-  value       = aws_subnet.public[*].id
+  description = "Dummy public subnet IDs, one per AZ."
+  value       = local.public_subnet_ids
 }
 
 output "private_subnet_ids" {
-  description = "Private subnet IDs, one per AZ."
-  value       = aws_subnet.private[*].id
-}
-
-output "account_email" {
-  description = "Root email of the customer AWS account."
-  value       = aws_organizations_account.this.email
+  description = "Dummy private subnet IDs, one per AZ."
+  value       = local.private_subnet_ids
 }

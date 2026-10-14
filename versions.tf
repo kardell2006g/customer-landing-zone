@@ -1,60 +1,12 @@
 terraform {
   required_version = ">= 1.5.0"
 
+  # Dummy landing zone: no AWS provider, so no AWS credentials are needed and
+  # nothing is created in AWS.
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 5.40, < 7.0"
+    random = {
+      source  = "hashicorp/random"
+      version = ">= 3.5"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = ">= 0.11"
-    }
-    tls = {
-      source  = "hashicorp/tls"
-      version = ">= 4.0"
-    }
-  }
-}
-
-locals {
-  # "TFC Workspace" links every resource, including the AWS account itself,
-  # back to the workspace that owns its state.
-  common_tags = merge(
-    {
-      "Company"           = var.company_name
-      "Environment"       = var.environment
-      "Terraform Managed" = "true"
-    },
-    var.TFC_WORKSPACE_SLUG != "" ? { "TFC Workspace" = var.TFC_WORKSPACE_SLUG } : {},
-  )
-}
-
-# Management (Organizations) account. Credentials come from the variable set
-# the customer-onboarding module attaches to this workspace.
-provider "aws" {
-  region = var.aws_region
-
-  default_tags {
-    tags = local.common_tags
-  }
-}
-
-# The new customer account, reached through the role Organizations creates in
-# it. The account ID is routed through time_sleep so the provider is only
-# configured once the account exists and the role has had time to propagate.
-# On the first plan the ARN is unknown; resources using this provider are
-# planned without API calls and the provider is configured for real at apply.
-provider "aws" {
-  alias  = "account"
-  region = var.aws_region
-
-  assume_role {
-    role_arn     = "arn:${data.aws_partition.current.partition}:iam::${time_sleep.account_ready.triggers["account_id"]}:role/${var.account_access_role_name}"
-    session_name = "terraform-landing-zone"
-  }
-
-  default_tags {
-    tags = local.common_tags
   }
 }
